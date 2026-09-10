@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/001-create-categoria-risco.yaml
+  - include:
+      file: db/changelog/changes/002-create-risco.yaml
+  - include:
+      file: db/changelog/changes/003-area-responsavel-e-limite-tolerancia.yaml

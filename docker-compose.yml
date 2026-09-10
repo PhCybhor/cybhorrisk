@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: cybhorrisco-postgres
+    environment:
+      POSTGRES_USER: cybhor_app
+      POSTGRES_PASSWORD: ${DB_DEV_PASSWORD:-cybhor}
+      POSTGRES_DB: cybhorrisco_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - cybhorrisco-pgdata:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+volumes:
+  cybhorrisco-pgdata:

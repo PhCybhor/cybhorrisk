@@ -1,0 +1,160 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-01-create-area-responsavel
+      author: curso-spring-2026
+      comment: Cria a entidade área responsável identificada por sigla.
+      changes:
+        - createTable:
+            tableName: area_responsavel
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_area_responsavel
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sigla
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: area_responsavel
+
+  - changeSet:
+      id: 003-02-unique-sigla-area-responsavel
+      author: curso-spring-2026
+      changes:
+        - addUniqueConstraint:
+            tableName: area_responsavel
+            columnNames: sigla
+            constraintName: uk_area_responsavel_sigla
+      rollback:
+        - dropUniqueConstraint:
+            tableName: area_responsavel
+            constraintName: uk_area_responsavel_sigla
+
+  - changeSet:
+      id: 003-03-check-status-area-responsavel
+      author: curso-spring-2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE area_responsavel
+              ADD CONSTRAINT ck_area_responsavel_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE area_responsavel
+              DROP CONSTRAINT ck_area_responsavel_status
+
+  - changeSet:
+      id: 003-04-add-limite-tolerancia-risco
+      author: curso-spring-2026
+      comment: Adiciona primeiro como nullable para preservar as linhas existentes.
+      changes:
+        - addColumn:
+            tableName: risco
+            columns:
+              - column:
+                  name: limite_tolerancia
+                  type: NUMERIC(18,2)
+      rollback:
+        - dropColumn:
+            tableName: risco
+            columnName: limite_tolerancia
+
+  - changeSet:
+      id: 003-05-fill-limite-tolerancia-risco
+      author: curso-spring-2026
+      comment: Preenche as linhas antigas antes de tornar a coluna obrigatória.
+      changes:
+        - update:
+            tableName: risco
+            columns:
+              - column:
+                  name: limite_tolerancia
+                  valueNumeric: 0
+            where: limite_tolerancia IS NULL
+      rollback:
+        - update:
+            tableName: risco
+            columns:
+              - column:
+                  name: limite_tolerancia
+                  value: null
+
+  - changeSet:
+      id: 003-06-not-null-limite-tolerancia-risco
+      author: curso-spring-2026
+      changes:
+        - addNotNullConstraint:
+            tableName: risco
+            columnName: limite_tolerancia
+            columnDataType: NUMERIC(18,2)
+      rollback:
+        - dropNotNullConstraint:
+            tableName: risco
+            columnName: limite_tolerancia
+            columnDataType: NUMERIC(18,2)
+
+  - changeSet:
+      id: 003-07-check-limite-tolerancia-risco
+      author: curso-spring-2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              ADD CONSTRAINT ck_risco_limite_tolerancia
+              CHECK (limite_tolerancia >= 0)
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              DROP CONSTRAINT ck_risco_limite_tolerancia
+
+  - changeSet:
+      id: 003-08-add-area-risco
+      author: curso-spring-2026
+      comment: Área responsável é opcional para manter compatibilidade com riscos existentes.
+      changes:
+        - addColumn:
+            tableName: risco
+            columns:
+              - column:
+                  name: area_responsavel_id
+                  type: BIGINT
+      rollback:
+        - dropColumn:
+            tableName: risco
+            columnName: area_responsavel_id
+
+  - changeSet:
+      id: 003-09-foreign-key-risco-area-responsavel
+      author: curso-spring-2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: risco
+            baseColumnNames: area_responsavel_id
+            referencedTableName: area_responsavel
+            referencedColumnNames: id
+            constraintName: fk_risco_area_responsavel
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: risco
+            constraintName: fk_risco_area_responsavel

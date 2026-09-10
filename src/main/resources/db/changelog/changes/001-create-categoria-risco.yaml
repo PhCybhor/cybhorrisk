@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-01-create-categoria-risco
+      author: curso-spring-2026
+      comment: Cria a tabela que classifica os riscos.
+      changes:
+        - createTable:
+            tableName: categoria_risco
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_categoria_risco
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: categoria_risco
+
+  - changeSet:
+      id: 001-02-check-status-categoria-risco
+      author: curso-spring-2026
+      comment: Restringe o status aos valores definidos no enum Java.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE categoria_risco
+              ADD CONSTRAINT ck_categoria_risco_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE categoria_risco
+              DROP CONSTRAINT ck_categoria_risco_status

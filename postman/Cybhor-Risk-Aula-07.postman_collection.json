@@ -1,0 +1,421 @@
+{
+  "info": {
+    "_postman_id": "c7b40r15-2026-aula-07-cybhor-risco",
+    "name": "Cybhor Risk - Aula 07",
+    "description": "Coleção da Aula 07 para a gerenciadora de risco Cybhor.\n\nImporte no Postman (Import > arquivo) e execute na ordem. A aplicação deve estar em http://localhost:8080 com o profile dev.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "siglaUnica",
+      "value": ""
+    },
+    {
+      "key": "codigoUnico",
+      "value": ""
+    },
+    {
+      "key": "categoriaId",
+      "value": ""
+    },
+    {
+      "key": "areaId",
+      "value": ""
+    },
+    {
+      "key": "riscoId",
+      "value": ""
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('runId')) {",
+          "    const id = Date.now().toString().slice(-8);",
+          "    pm.collectionVariables.set('runId', id);",
+          "    pm.collectionVariables.set('siglaUnica', 'A' + id.slice(-7));",
+          "    pm.collectionVariables.set('codigoUnico', 'RSK-' + id);",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Health check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status deve ser 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Corpo deve ser OK', function () {",
+              "    pm.expect(pm.response.text()).to.eql('OK');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/health"
+      }
+    },
+    {
+      "name": "01 - Cadastrar categoria",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Categoria deve ser criada', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Resposta deve possuir id', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.id).to.be.a('number');",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('categoriaId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Tecnológico {{runId}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/categorias-risco"
+      }
+    },
+    {
+      "name": "02 - Cadastrar area",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Área deve ser criada', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('areaId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Tecnologia da Informação\",\n  \"sigla\": \"{{siglaUnica}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/areas-responsaveis"
+      }
+    },
+    {
+      "name": "03 - Cadastrar risco",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Risco deve ser criado', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Risco deve referenciar categoria e área', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.categoriaId).to.eql(Number(pm.collectionVariables.get('categoriaId')));",
+              "    pm.expect(body.areaId).to.eql(Number(pm.collectionVariables.get('areaId')));",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('riscoId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigo\": \"{{codigoUnico}}\",\n  \"descricao\": \"Indisponibilidade do sistema de autenticação\",\n  \"probabilidade\": 20.000,\n  \"impactoFinanceiro\": 15000.00,\n  \"limiteTolerancia\": 5000.00,\n  \"categoriaId\": {{categoriaId}},\n  \"areaId\": {{areaId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/riscos"
+      }
+    },
+    {
+      "name": "04 - Buscar risco por ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Consulta deve retornar 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Deve retornar o risco solicitado', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.id).to.eql(Number(pm.collectionVariables.get('riscoId')));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/riscos/{{riscoId}}"
+      }
+    },
+    {
+      "name": "05 - Listar riscos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Listagem deve retornar 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Resposta deve ser uma lista', function () {",
+              "    pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/riscos"
+      }
+    },
+    {
+      "name": "06 - Listar categorias",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/categorias-risco"
+      }
+    },
+    {
+      "name": "07 - Listar areas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/areas-responsaveis"
+      }
+    },
+    {
+      "name": "Erros",
+      "item": [
+        {
+          "name": "08 - Risco inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Entrada inválida deve retornar 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Resposta deve identificar campos inválidos', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.fields).to.be.an('object');",
+                  "    pm.expect(body.fields).to.have.property('descricao');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"\",\n  \"descricao\": \"\",\n  \"probabilidade\": -2,\n  \"impactoFinanceiro\": -1,\n  \"limiteTolerancia\": -3,\n  \"categoriaId\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/riscos"
+          }
+        },
+        {
+          "name": "09 - Risco inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Recurso inexistente deve retornar 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Deve seguir o formato ApiError', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql('Risco não encontrado');",
+                  "    pm.expect(body.path).to.include('/api/riscos/');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/riscos/999999999"
+          }
+        },
+        {
+          "name": "10 - Código duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Código repetido deve retornar 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"{{codigoUnico}}\",\n  \"descricao\": \"Tentativa duplicada\",\n  \"probabilidade\": 10.000,\n  \"impactoFinanceiro\": 1000.00,\n  \"limiteTolerancia\": 100.00,\n  \"categoriaId\": {{categoriaId}},\n  \"areaId\": {{areaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/riscos"
+          }
+        },
+        {
+          "name": "11 - JSON malformado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('JSON inválido deve retornar 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Mensagem deve indicar JSON inválido', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql('JSON ausente ou inválido');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"JSON-INVALIDO\",\n  \"descricao\": \"vírgula faltando\"\n  \"probabilidade\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/riscos"
+          }
+        }
+      ]
+    }
+  ]
+}

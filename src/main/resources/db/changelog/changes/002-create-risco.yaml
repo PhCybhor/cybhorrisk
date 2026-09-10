@@ -1,0 +1,134 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-01-create-risco
+      author: curso-spring-2026
+      comment: Cria a tabela principal de riscos.
+      changes:
+        - createTable:
+            tableName: risco
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_risco
+                    nullable: false
+              - column:
+                  name: codigo
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descricao
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: probabilidade
+                  type: NUMERIC(18,3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: impacto_financeiro
+                  type: NUMERIC(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_identificacao
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: categoria_risco_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: risco
+
+  - changeSet:
+      id: 002-02-unique-codigo
+      author: curso-spring-2026
+      comment: Garante a unicidade global do código do risco.
+      changes:
+        - addUniqueConstraint:
+            tableName: risco
+            columnNames: codigo
+            constraintName: uk_risco_codigo
+      rollback:
+        - dropUniqueConstraint:
+            tableName: risco
+            constraintName: uk_risco_codigo
+
+  - changeSet:
+      id: 002-03-foreign-key-categoria-risco
+      author: curso-spring-2026
+      comment: Liga cada risco à sua categoria.
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: risco
+            baseColumnNames: categoria_risco_id
+            referencedTableName: categoria_risco
+            referencedColumnNames: id
+            constraintName: fk_risco_categoria_risco
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: risco
+            constraintName: fk_risco_categoria_risco
+
+  - changeSet:
+      id: 002-04-check-probabilidade
+      author: curso-spring-2026
+      comment: Impede probabilidade negativa inclusive fora da aplicação Java.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              ADD CONSTRAINT ck_risco_probabilidade
+              CHECK (probabilidade >= 0)
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              DROP CONSTRAINT ck_risco_probabilidade
+
+  - changeSet:
+      id: 002-05-check-impacto-financeiro
+      author: curso-spring-2026
+      comment: Impede impacto financeiro negativo inclusive fora da aplicação Java.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              ADD CONSTRAINT ck_risco_impacto_financeiro
+              CHECK (impacto_financeiro >= 0)
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              DROP CONSTRAINT ck_risco_impacto_financeiro
+
+  - changeSet:
+      id: 002-06-check-status-risco
+      author: curso-spring-2026
+      comment: Restringe o status aos valores definidos no enum Java.
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              ADD CONSTRAINT ck_risco_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+      rollback:
+        - sql:
+            sql: >
+              ALTER TABLE risco
+              DROP CONSTRAINT ck_risco_status
