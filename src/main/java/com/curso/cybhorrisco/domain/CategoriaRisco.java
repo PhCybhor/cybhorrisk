@@ -43,20 +43,13 @@ public class CategoriaRisco {
 
     public void adicionarRisco(Risco risco) {
         Objects.requireNonNull(risco, "Risco é obrigatório");
-
-        boolean codigoJaUtilizado = riscos.stream()
-                .anyMatch(item -> item != risco
-                        && item.getCodigo().equals(risco.getCodigo()));
-
-        if (codigoJaUtilizado) {
-            throw new IllegalArgumentException("Código já utilizado na categoria");
-        }
-
+        validarInclusao(risco);
         risco.associarA(this);
+        adicionarInternamente(risco);
+    }
 
-        if (!riscos.contains(risco)) {
-            riscos.add(risco);
-        }
+    public void alterarNome(String novoNome) {
+        this.nome = validarTextoObrigatorio(novoNome, "Nome da categoria é obrigatório");
     }
 
     public void ativar() {
@@ -81,6 +74,26 @@ public class CategoriaRisco {
 
     public List<Risco> getRiscos() {
         return List.copyOf(riscos);
+    }
+
+    void validarInclusao(Risco risco) {
+        boolean codigoJaUtilizado = riscos.stream()
+                .anyMatch(item -> item != risco
+                        && item.getCodigo().equals(risco.getCodigo()));
+
+        if (codigoJaUtilizado) {
+            throw new IllegalArgumentException("Código já utilizado na categoria");
+        }
+    }
+
+    void adicionarInternamente(Risco risco) {
+        if (!riscos.contains(risco)) {
+            riscos.add(risco);
+        }
+    }
+
+    void removerInternamente(Risco risco) {
+        riscos.remove(risco);
     }
 
     private static String validarTextoObrigatorio(String texto, String mensagem) {

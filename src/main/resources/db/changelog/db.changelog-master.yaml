@@ -5,3 +5,13 @@ databaseChangeLog:
       file: db/changelog/changes/002-create-risco.yaml
   - include:
       file: db/changelog/changes/003-area-responsavel-e-limite-tolerancia.yaml
+  - include:
+      file: db/changelog/changes/004-unique-nome-categoria-risco.yaml
+  - include:
+      file: db/changelog/changes/005-pessoas-interessados-planos.yaml
+  - include:
+      file: db/changelog/changes/006-contas-acesso.yaml
+  - include:
+      file: db/changelog/changes/007-sessoes-refresh-token.yaml
+  - include:
+      file: db/changelog/changes/008-auditoria-protecao-autenticacao.yaml

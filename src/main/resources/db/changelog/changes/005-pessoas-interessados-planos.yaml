@@ -1,0 +1,364 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-01-create-pessoa
+      author: curso-spring-2026
+      comment: Centraliza a identidade civil compartilhada por interessados e analistas.
+      changes:
+        - createTable:
+            tableName: pessoa
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_pessoa
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(180)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cpf
+                  type: VARCHAR(11)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_cadastro
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: pessoa
+
+  - changeSet:
+      id: 005-02-unique-email-pessoa
+      author: curso-spring-2026
+      comment: Impede e-mails duplicados ignorando espaços laterais e maiúsculas.
+      changes:
+        - sql:
+            sql: >
+              CREATE UNIQUE INDEX uk_pessoa_email_lower
+              ON pessoa (LOWER(BTRIM(email)))
+      rollback:
+        - sql:
+            sql: DROP INDEX uk_pessoa_email_lower
+
+  - changeSet:
+      id: 005-03-unique-cpf-pessoa
+      author: curso-spring-2026
+      changes:
+        - addUniqueConstraint:
+            tableName: pessoa
+            columnNames: cpf
+            constraintName: uk_pessoa_cpf
+      rollback:
+        - dropUniqueConstraint:
+            tableName: pessoa
+            constraintName: uk_pessoa_cpf
+
+  - changeSet:
+      id: 005-04-check-pessoa
+      author: curso-spring-2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE pessoa
+              ADD CONSTRAINT ck_pessoa_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+        - sql:
+            sql: >
+              ALTER TABLE pessoa
+              ADD CONSTRAINT ck_pessoa_cpf_formato
+              CHECK (cpf ~ '^[0-9]{11}$')
+      rollback:
+        - sql:
+            sql: ALTER TABLE pessoa DROP CONSTRAINT ck_pessoa_cpf_formato
+        - sql:
+            sql: ALTER TABLE pessoa DROP CONSTRAINT ck_pessoa_status
+
+  - changeSet:
+      id: 005-05-create-interessado
+      author: curso-spring-2026
+      changes:
+        - createTable:
+            tableName: interessado
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_interessado
+                    nullable: false
+              - column:
+                  name: pessoa_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_interessado_pessoa
+              - column:
+                  name: telefone
+                  type: VARCHAR(30)
+      rollback:
+        - dropTable:
+            tableName: interessado
+
+  - changeSet:
+      id: 005-06-fk-interessado-pessoa
+      author: curso-spring-2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: interessado
+            baseColumnNames: pessoa_id
+            referencedTableName: pessoa
+            referencedColumnNames: id
+            constraintName: fk_interessado_pessoa
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: interessado
+            constraintName: fk_interessado_pessoa
+
+  - changeSet:
+      id: 005-07-create-analista
+      author: curso-spring-2026
+      changes:
+        - createTable:
+            tableName: analista
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_analista
+                    nullable: false
+              - column:
+                  name: pessoa_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_analista_pessoa
+              - column:
+                  name: matricula
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_analista_matricula
+              - column:
+                  name: funcao
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_admissao
+                  type: DATE
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: analista
+
+  - changeSet:
+      id: 005-08-constraints-analista
+      author: curso-spring-2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: analista
+            baseColumnNames: pessoa_id
+            referencedTableName: pessoa
+            referencedColumnNames: id
+            constraintName: fk_analista_pessoa
+            onDelete: RESTRICT
+        - sql:
+            sql: >
+              ALTER TABLE analista
+              ADD CONSTRAINT ck_analista_funcao
+              CHECK (funcao IN ('ANALISTA', 'OPERACIONAL', 'GERENTE', 'ADMINISTRATIVO'))
+      rollback:
+        - sql:
+            sql: ALTER TABLE analista DROP CONSTRAINT ck_analista_funcao
+        - dropForeignKeyConstraint:
+            baseTableName: analista
+            constraintName: fk_analista_pessoa
+
+  - changeSet:
+      id: 005-09-create-plano-mitigacao
+      author: curso-spring-2026
+      changes:
+        - createTable:
+            tableName: plano_mitigacao
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_plano_mitigacao
+                    nullable: false
+              - column:
+                  name: interessado_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: analista_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_plano
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: plano_mitigacao
+
+  - changeSet:
+      id: 005-10-constraints-plano-mitigacao
+      author: curso-spring-2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: plano_mitigacao
+            baseColumnNames: interessado_id
+            referencedTableName: interessado
+            referencedColumnNames: id
+            constraintName: fk_plano_mitigacao_interessado
+            onDelete: RESTRICT
+        - addForeignKeyConstraint:
+            baseTableName: plano_mitigacao
+            baseColumnNames: analista_id
+            referencedTableName: analista
+            referencedColumnNames: id
+            constraintName: fk_plano_mitigacao_analista
+            onDelete: RESTRICT
+        - sql:
+            sql: >
+              ALTER TABLE plano_mitigacao
+              ADD CONSTRAINT ck_plano_mitigacao_status
+              CHECK (status IN ('ABERTA', 'FINALIZADA', 'CANCELADA'))
+      rollback:
+        - sql:
+            sql: ALTER TABLE plano_mitigacao DROP CONSTRAINT ck_plano_mitigacao_status
+        - dropForeignKeyConstraint:
+            baseTableName: plano_mitigacao
+            constraintName: fk_plano_mitigacao_analista
+        - dropForeignKeyConstraint:
+            baseTableName: plano_mitigacao
+            constraintName: fk_plano_mitigacao_interessado
+
+  - changeSet:
+      id: 005-11-create-item-mitigacao
+      author: curso-spring-2026
+      comment: Resolve a relação muitos-para-muitos e preserva redução e custo estimado praticado.
+      changes:
+        - createTable:
+            tableName: item_mitigacao
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_item_mitigacao
+                    nullable: false
+              - column:
+                  name: plano_mitigacao_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: risco_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reducao_probabilidade
+                  type: NUMERIC(18,3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: custo_estimado
+                  type: NUMERIC(18,2)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: item_mitigacao
+            columnNames: plano_mitigacao_id, risco_id
+            constraintName: uk_item_mitigacao_risco
+      rollback:
+        - dropTable:
+            tableName: item_mitigacao
+
+  - changeSet:
+      id: 005-12-fks-item-mitigacao
+      author: curso-spring-2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: item_mitigacao
+            baseColumnNames: plano_mitigacao_id
+            referencedTableName: plano_mitigacao
+            referencedColumnNames: id
+            constraintName: fk_item_mitigacao_plano
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: item_mitigacao
+            baseColumnNames: risco_id
+            referencedTableName: risco
+            referencedColumnNames: id
+            constraintName: fk_item_mitigacao_risco
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: item_mitigacao
+            constraintName: fk_item_mitigacao_risco
+        - dropForeignKeyConstraint:
+            baseTableName: item_mitigacao
+            constraintName: fk_item_mitigacao_plano
+
+  - changeSet:
+      id: 005-13-checks-item-mitigacao
+      author: curso-spring-2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE item_mitigacao
+              ADD CONSTRAINT ck_item_mitigacao_reducao
+              CHECK (reducao_probabilidade > 0)
+        - sql:
+            sql: >
+              ALTER TABLE item_mitigacao
+              ADD CONSTRAINT ck_item_mitigacao_custo_estimado
+              CHECK (custo_estimado >= 0)
+      rollback:
+        - sql:
+            sql: ALTER TABLE item_mitigacao DROP CONSTRAINT ck_item_mitigacao_custo_estimado
+        - sql:
+            sql: ALTER TABLE item_mitigacao DROP CONSTRAINT ck_item_mitigacao_reducao
