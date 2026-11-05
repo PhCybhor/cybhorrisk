@@ -145,6 +145,28 @@ public class Risco {
                 "Impacto financeiro não pode ser negativo");
     }
 
+    public void alterarLimiteTolerancia(BigDecimal novoLimite) {
+        this.limiteTolerancia = validarNaoNegativo(
+                novoLimite,
+                "Limite de tolerância não pode ser negativo");
+    }
+
+    public void alterarCategoria(CategoriaRisco novaCategoria) {
+        Objects.requireNonNull(
+                novaCategoria,
+                "Categoria de risco é obrigatória");
+        if (this.categoria == novaCategoria) {
+            return;
+        }
+
+        novaCategoria.validarInclusao(this);
+        if (this.categoria != null) {
+            this.categoria.removerInternamente(this);
+        }
+        this.categoria = novaCategoria;
+        novaCategoria.adicionarInternamente(this);
+    }
+
     public void ativar() {
         this.status = Status.ATIVO;
     }
@@ -167,6 +189,10 @@ public class Risco {
         this.areaResponsavel = Objects.requireNonNull(
                 areaResponsavel,
                 "Área responsável é obrigatória");
+    }
+
+    public void alterarArea(AreaResponsavel areaResponsavel) {
+        this.areaResponsavel = areaResponsavel;
     }
 
     public String getCodigo() {

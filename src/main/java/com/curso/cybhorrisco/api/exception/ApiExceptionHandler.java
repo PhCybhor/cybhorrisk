@@ -1,6 +1,8 @@
 package com.curso.cybhorrisco.api.exception;
 
 import com.curso.cybhorrisco.application.RecursoDuplicadoException;
+import com.curso.cybhorrisco.application.CredenciaisInvalidasException;
+import com.curso.cybhorrisco.application.RecursoEmUsoException;
 import com.curso.cybhorrisco.application.RecursoNaoEncontradoException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,6 +20,17 @@ import java.util.Map;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ApiError> tratarCredenciaisInvalidas(
+            CredenciaisInvalidasException exception,
+            HttpServletRequest request) {
+        return resposta(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage(),
+                request,
+                Map.of());
+    }
+
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ResponseEntity<ApiError> tratarNaoEncontrado(
             RecursoNaoEncontradoException exception,
@@ -29,11 +42,13 @@ public class ApiExceptionHandler {
                 Map.of());
     }
 
-    @ExceptionHandler({RecursoDuplicadoException.class, DataIntegrityViolationException.class})
+    @ExceptionHandler({RecursoDuplicadoException.class, RecursoEmUsoException.class,
+            DataIntegrityViolationException.class})
     public ResponseEntity<ApiError> tratarConflito(
             RuntimeException exception,
             HttpServletRequest request) {
         String mensagem = exception instanceof RecursoDuplicadoException
+                || exception instanceof RecursoEmUsoException
                 ? exception.getMessage()
                 : "A operação viola uma regra de integridade";
         return resposta(HttpStatus.CONFLICT, mensagem, request, Map.of());
@@ -63,6 +78,17 @@ public class ApiExceptionHandler {
         return resposta(
                 HttpStatus.BAD_REQUEST,
                 "JSON ausente ou inválido",
+                request,
+                Map.of());
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ApiError> tratarRegraInvalida(
+            RuntimeException exception,
+            HttpServletRequest request) {
+        return resposta(
+                HttpStatus.BAD_REQUEST,
+                exception.getMessage(),
                 request,
                 Map.of());
     }

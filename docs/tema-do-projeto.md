@@ -4,7 +4,7 @@
 
 - Nome: `cybhor-risco`
 - Tema: gerenciadora simplificada de riscos corporativos
-- Objetivo: cadastrar riscos e organizá-los por categorias, com área responsável opcional
+- Objetivo: cadastrar riscos e organizá-los por categorias, com área responsável opcional, interessados, analistas e planos de mitigação autenticados
 
 ## Entidade de classificação
 
@@ -33,16 +33,37 @@
 - Identificador único: sigla
 - Relacionamento: um risco pode ter uma área responsável opcional
 
-## Relacionamento
+## Pessoas e papéis (Aula 10)
 
-- Uma categoria de risco pode classificar vários riscos.
-- Cada risco pertence a uma categoria de risco.
-- Uma área responsável pode acompanhar vários riscos.
-- A área de um risco é opcional.
+- `Pessoa`: identidade civil compartilhada (nome, e-mail, CPF)
+- `Interessado`: papel composto sobre `Pessoa` (telefone opcional)
+- `Analista`: papel composto sobre `Pessoa` (matrícula, `FuncaoAnalista`, data de admissão)
+- Funções: `ANALISTA`, `OPERACIONAL`, `GERENTE`, `ADMINISTRATIVO`
+
+## Plano de mitigação (Aulas 10–11)
+
+- `PlanoMitigacao`: composição com interessado, analista, status (`ABERTA` / `FINALIZADA` / `CANCELADA`) e itens
+- `ItemMitigacao`: risco + `reducaoProbabilidade` + `custoEstimado` histórico (capturado do impacto financeiro)
+- Finalizar aplica `mitigar()` em cada risco com `PESSIMISTIC_WRITE`, bloqueando riscos em ordem de ID
+- Cancelar não altera probabilidade
+
+## Segurança (Aulas 12–17)
+
+- `ContaAcesso` ligada a `Pessoa`, perfis `OPERADOR` / `ADMINISTRADOR`
+- JWT + refresh token com rotação, auditoria de eventos e proteção contra falhas consecutivas
+- JaCoCo: mínimo 0,70 linha / 0,40 branch
+
+## Relacionamento
 
 ```text
 CategoriaRisco 1 ─────── N Risco
 AreaResponsavel  1 ─────── N Risco
+Pessoa 1 ─────── 0..1 Interessado
+Pessoa 1 ─────── 0..1 Analista
+Pessoa 1 ─────── 0..1 ContaAcesso
+Interessado 1 ─────── N PlanoMitigacao
+Analista 1 ─────── N PlanoMitigacao
+PlanoMitigacao 1 ─────── N ItemMitigacao N ─────── 1 Risco
 ```
 
 ## Correspondência com o projeto de referência
@@ -53,12 +74,19 @@ AreaResponsavel  1 ─────── N Risco
 | `Produto` | `Risco` |
 | `Fornecedor` | `AreaResponsavel` |
 | Código de barras | Código do risco |
-| Saldo em estoque | Probabilidade |
+| Saldo em estoque / `receberEstoque` / `retirarEstoque` | Probabilidade / `registrarOcorrencia` / `mitigar` |
 | Valor unitário | Impacto financeiro |
 | Valor do estoque | Exposição |
-| Estoque mínimo | Limite de tolerância |
+| Estoque mínimo / abaixo do mínimo | Limite de tolerância / acima do limite |
 | Data de cadastro | Data de identificação |
-| CNPJ | Sigla da área |
+| CNPJ | Sigla da área (`DocumentoFiscal` mantido para CPF) |
+| `Pessoa` | `Pessoa` |
+| `Cliente` | `Interessado` |
+| `Colaborador` / `FuncaoColaborador` | `Analista` / `FuncaoAnalista` |
+| `Venda` / `ItemVenda` / `StatusVenda` | `PlanoMitigacao` / `ItemMitigacao` / `StatusPlanoMitigacao` |
+| `quantidade` / `precoUnitario` | `reducaoProbabilidade` / `custoEstimado` |
+| `/api/clientes` / `/api/colaboradores` / `/api/vendas` | `/api/interessados` / `/api/analistas` / `/api/planos-mitigacao` |
+| `ContaAcesso`, JWT, refresh, auditoria | mesmos conceitos no pacote `cybhorrisco` |
 
 ## Exemplos
 

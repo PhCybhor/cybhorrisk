@@ -1,0 +1,7 @@
+package com.curso.cybhorrisco.api.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Size;
+
+public record InteressadoAtualizacaoRequest(
+        @Size(max = 30) @Schema(example = "(11) 98888-0000") String telefone) { }
